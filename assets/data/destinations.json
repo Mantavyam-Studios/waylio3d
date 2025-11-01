@@ -1,0 +1,119 @@
+{
+  "building": "USB",
+  "floor": "Ground",
+  "destinations": [
+    {
+      "id": "usb_main",
+      "name": "Main Hall",
+      "roomNumber": "USB-Main",
+      "category": "Facility",
+      "description": "Main entrance hall",
+      "coordinates": null
+    },
+    {
+      "id": "usb_entrance",
+      "name": "Entrance",
+      "roomNumber": "USB-Entrance",
+      "category": "Facility",
+      "description": "Building entrance",
+      "coordinates": null
+    },
+    {
+      "id": "usb_left_exit",
+      "name": "Left Exit",
+      "roomNumber": "USB-Left-Exit",
+      "category": "Facility",
+      "description": "Left side exit",
+      "coordinates": null
+    },
+    {
+      "id": "usb_right_wing",
+      "name": "Right Wing",
+      "roomNumber": "USB-Right-Wing",
+      "category": "Facility",
+      "description": "Right wing corridor",
+      "coordinates": null
+    },
+    {
+      "id": "usb_hall_1",
+      "name": "Hall 1",
+      "roomNumber": "USB-Hall-1",
+      "category": "Classroom",
+      "description": "Lecture hall 1",
+      "coordinates": null
+    },
+    {
+      "id": "usb_hall_2",
+      "name": "Hall 2",
+      "roomNumber": "USB-Hall-2",
+      "category": "Classroom",
+      "description": "Lecture hall 2",
+      "coordinates": null
+    },
+    {
+      "id": "usb_hall_3",
+      "name": "Hall 3",
+      "roomNumber": "USB-Hall-3",
+      "category": "Classroom",
+      "description": "Lecture hall 3",
+      "coordinates": null
+    },
+    {
+      "id": "usb_lab_1",
+      "name": "Computer Lab 1",
+      "roomNumber": "USB-Lab-1",
+      "category": "Laboratory",
+      "description": "Computer laboratory 1",
+      "coordinates": null
+    },
+    {
+      "id": "usb_lab_2",
+      "name": "Computer Lab 2",
+      "roomNumber": "USB-Lab-2",
+      "category": "Laboratory",
+      "description": "Computer laboratory 2",
+      "coordinates": null
+    },
+    {
+      "id": "usb_office_1",
+      "name": "Faculty Office 1",
+      "roomNumber": "USB-Office-1",
+      "category": "Office",
+      "description": "Faculty office room 1",
+      "coordinates": null
+    },
+    {
+      "id": "usb_office_2",
+      "name": "Faculty Office 2",
+      "roomNumber": "USB-Office-2",
+      "category": "Office",
+      "description": "Faculty office room 2",
+      "coordinates": null
+    },
+    {
+      "id": "usb_restroom_male",
+      "name": "Men's Restroom",
+      "roomNumber": "USB-Restroom-M",
+      "category": "Facility",
+      "description": "Men's restroom",
+      "coordinates": null
+    },
+    {
+      "id": "usb_restroom_female",
+      "name": "Women's Restroom",
+      "roomNumber": "USB-Restroom-F",
+      "category": "Facility",
+      "description": "Women's restroom",
+      "coordinates": null
+    },
+    {
+      "id": "usb_cafeteria",
+      "name": "Cafeteria",
+      "roomNumber": "USB-Cafeteria",
+      "category": "Facility",
+      "description": "Student cafeteria",
+      "coordinates": null
+    }
+  ]
+}
+

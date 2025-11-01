@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "535833660625",
+    "project_id": "waylioapp",
+    "storage_bucket": "waylioapp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:535833660625:android:bfa29d335dc032191549f0",
+        "android_client_info": {
+          "package_name": "com.mantavyam.waylioapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "535833660625-b59mfsjktvss1b0nq67mnrlar164qik6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mantavyam.waylioapp",
+            "certificate_hash": "3b63c1136d5b8cf4ad4a526c788f59d566bbf67d"
+          }
+        },
+        {
+          "client_id": "535833660625-0jv6onrffql2or97cfamnm9j8pe0mcc8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCMBMYFVZNTbELxmgkoIPRK_GZ6OXpDdL4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "535833660625-0jv6onrffql2or97cfamnm9j8pe0mcc8.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
