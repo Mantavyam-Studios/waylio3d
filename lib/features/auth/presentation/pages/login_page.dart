@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../data/auth_bloc.dart';
+import '../../data/auth_event.dart';
+import '../../data/auth_state.dart';
 import '../../../../core/constants/app_constants.dart';
 
 class LoginPage extends StatefulWidget {
@@ -27,39 +31,45 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> _handleEmailLogin() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isLoading = true);
-
-    // TODO: Implement Firebase email/password login
-    await Future.delayed(const Duration(seconds: 2));
-
-    if (mounted) {
-      setState(() => _isLoading = false);
-      context.go('/main');
-    }
+    context.read<AuthBloc>().add(
+      SignInWithEmail(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      ),
+    );
   }
 
   Future<void> _handleGoogleLogin() async {
-    setState(() => _isLoading = true);
-
-    // TODO: Implement Google Sign-In
-    await Future.delayed(const Duration(seconds: 2));
-
-    if (mounted) {
-      setState(() => _isLoading = false);
-      context.go('/main');
-    }
+    context.read<AuthBloc>().add(SignInWithGoogle());
   }
 
   Future<void> _handleGuestMode() async {
-    // TODO: Set guest mode flag
-    context.go('/main');
+    context.read<AuthBloc>().add(ContinueAsGuest());
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is Authenticated || state is GuestMode) {
+          context.go('/main');
+        } else if (state is AuthError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: AppColors.error,
+            ),
+          );
+          setState(() => _isLoading = false);
+        } else if (state is AuthLoading) {
+          setState(() => _isLoading = true);
+        } else {
+          setState(() => _isLoading = false);
+        }
+      },
+      child: Scaffold(
+        body: SafeArea(
+          child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Form(
             key: _formKey,
@@ -223,6 +233,7 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ),
       ),
+    ),
     );
   }
 }

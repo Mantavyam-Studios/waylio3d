@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../data/auth_bloc.dart';
+import '../../data/auth_event.dart';
+import '../../data/auth_state.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -30,33 +34,42 @@ class _SignupPageState extends State<SignupPage> {
   Future<void> _handleSignup() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isLoading = true);
-
-    // TODO: Implement Firebase signup
-    await Future.delayed(const Duration(seconds: 2));
-
-    if (mounted) {
-      setState(() => _isLoading = false);
-      context.go('/main');
-    }
+    context.read<AuthBloc>().add(
+      SignUpWithEmail(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        name: _nameController.text.trim(),
+        userType: _selectedUserType,
+      ),
+    );
   }
 
   Future<void> _handleGoogleSignup() async {
-    setState(() => _isLoading = true);
-
-    // TODO: Implement Google Sign-In
-    await Future.delayed(const Duration(seconds: 2));
-
-    if (mounted) {
-      setState(() => _isLoading = false);
-      context.go('/main');
-    }
+    context.read<AuthBloc>().add(SignInWithGoogle());
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is Authenticated || state is GuestMode) {
+          context.go('/main');
+        } else if (state is AuthError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: AppColors.error,
+            ),
+          );
+          setState(() => _isLoading = false);
+        } else if (state is AuthLoading) {
+          setState(() => _isLoading = true);
+        } else {
+          setState(() => _isLoading = false);
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/login'),
@@ -227,6 +240,7 @@ class _SignupPageState extends State<SignupPage> {
           ),
         ),
       ),
+    ),
     );
   }
 }

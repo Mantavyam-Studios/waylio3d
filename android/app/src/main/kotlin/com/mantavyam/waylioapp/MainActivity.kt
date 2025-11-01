@@ -1,4 +1,4 @@
-package com.example.waylio3d
+package com.mantavyam.waylioapp
 
 import io.flutter.embedding.android.FlutterActivity
 

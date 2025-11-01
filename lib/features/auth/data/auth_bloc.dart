@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../data/services/firebase_service.dart';
@@ -13,6 +14,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   AuthBloc({FirebaseService? firebaseService})
       : _firebaseService = firebaseService ?? FirebaseService(),
         super(AuthInitial()) {
+    debugPrint('🔐 AuthBloc initialized');
+
     // Register event handlers
     on<CheckAuthStatus>(_onCheckAuthStatus);
     on<SignUpWithEmail>(_onSignUpWithEmail);
@@ -26,14 +29,23 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     // Listen to auth state changes
     _authSubscription = _firebaseService.authStateChanges.listen((user) {
+      debugPrint('🔄 Auth state changed: ${user?.email ?? "null"}');
       if (user != null) {
+        debugPrint('👤 User signed in, checking auth status');
         add(CheckAuthStatus());
       } else {
         if (state is! GuestMode) {
-          emit(Unauthenticated());
+          debugPrint('👤 User signed out, checking auth status');
+          add(CheckAuthStatus());
         }
       }
     });
+  }
+
+  @override
+  void onChange(Change<AuthState> change) {
+    super.onChange(change);
+    debugPrint('🔄 AuthBloc state changed: ${change.currentState.runtimeType} → ${change.nextState.runtimeType}');
   }
 
   Future<void> _onCheckAuthStatus(
@@ -41,6 +53,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     try {
+      debugPrint('🔍 Checking auth status...');
       emit(AuthLoading());
 
       // Check if in guest mode
@@ -48,6 +61,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final isGuest = prefs.getBool('is_guest') ?? false;
 
       if (isGuest) {
+        debugPrint('👤 User is in guest mode');
         emit(GuestMode(UserModel.guest()));
         return;
       }
@@ -55,18 +69,23 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       // Check Firebase auth
       final user = _firebaseService.currentUser;
       if (user != null) {
+        debugPrint('👤 Firebase user found: ${user.email}');
         // Listen to user stream to get user data
         final userStream = _firebaseService.getUserStream(user.uid);
         final userModel = await userStream.first;
         if (userModel != null) {
+          debugPrint('✅ User authenticated: ${userModel.email}');
           emit(Authenticated(userModel));
         } else {
+          debugPrint('❌ User document not found in Firestore');
           emit(Unauthenticated());
         }
       } else {
+        debugPrint('❌ No Firebase user found');
         emit(Unauthenticated());
       }
     } catch (e) {
+      debugPrint('❌ Error checking auth status: $e');
       emit(AuthError(e.toString()));
     }
   }
@@ -76,6 +95,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     try {
+      debugPrint('📝 Sign up event received for: ${event.email}');
       emit(AuthLoading());
 
       final user = await _firebaseService.signUpWithEmail(
@@ -86,15 +106,19 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       );
 
       if (user != null) {
+        debugPrint('✅ Sign up successful, clearing guest mode');
         // Clear guest mode
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('is_guest', false);
 
+        debugPrint('✅ Emitting Authenticated state');
         emit(Authenticated(user));
       } else {
+        debugPrint('❌ Sign up failed: no user returned');
         emit(const AuthError('Failed to create account'));
       }
     } catch (e) {
+      debugPrint('❌ Sign up error: $e');
       emit(AuthError(e.toString()));
     }
   }
@@ -104,6 +128,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     try {
+      debugPrint('🔐 Sign in event received for: ${event.email}');
       emit(AuthLoading());
 
       final user = await _firebaseService.signInWithEmail(
@@ -112,15 +137,19 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       );
 
       if (user != null) {
+        debugPrint('✅ Sign in successful, clearing guest mode');
         // Clear guest mode
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('is_guest', false);
 
+        debugPrint('✅ Emitting Authenticated state');
         emit(Authenticated(user));
       } else {
+        debugPrint('❌ Sign in failed: no user returned');
         emit(const AuthError('Failed to sign in'));
       }
     } catch (e) {
+      debugPrint('❌ Sign in error: $e');
       emit(AuthError(e.toString()));
     }
   }
@@ -130,21 +159,26 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     try {
+      debugPrint('🔐 Google sign in event received');
       emit(AuthLoading());
 
       final user = await _firebaseService.signInWithGoogle();
 
       if (user != null) {
+        debugPrint('✅ Google sign in successful, clearing guest mode');
         // Clear guest mode
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('is_guest', false);
 
+        debugPrint('✅ Emitting Authenticated state');
         emit(Authenticated(user));
       } else {
+        debugPrint('❌ Google sign in cancelled by user');
         // User cancelled
         emit(Unauthenticated());
       }
     } catch (e) {
+      debugPrint('❌ Google sign in error: $e');
       emit(AuthError(e.toString()));
     }
   }
@@ -154,14 +188,17 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     try {
+      debugPrint('👤 Continue as guest event received');
       emit(AuthLoading());
 
       // Set guest mode flag
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('is_guest', true);
 
+      debugPrint('✅ Guest mode enabled');
       emit(GuestMode(UserModel.guest()));
     } catch (e) {
+      debugPrint('❌ Guest mode error: $e');
       emit(AuthError(e.toString()));
     }
   }
@@ -171,6 +208,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     try {
+      debugPrint('🚪 Sign out event received');
       emit(AuthLoading());
 
       // Clear guest mode
@@ -180,8 +218,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       // Sign out from Firebase
       await _firebaseService.signOut();
 
+      debugPrint('✅ Sign out successful, emitting Unauthenticated');
       emit(Unauthenticated());
     } catch (e) {
+      debugPrint('❌ Sign out error: $e');
       emit(AuthError(e.toString()));
     }
   }
