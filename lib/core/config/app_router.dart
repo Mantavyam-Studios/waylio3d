@@ -6,7 +6,9 @@ import '../../features/onboarding/presentation/pages/splash_page.dart';
 import '../../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/explore/presentation/pages/explore_page.dart';
+import '../../features/explore/presentation/pages/destination_details_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
+import '../../features/navigation/presentation/pages/ar_camera_view.dart';
 import '../../shared/widgets/main_navigation.dart';
 
 class AppRouter {
@@ -71,7 +73,31 @@ class AppRouter {
         builder: (context, state) => const ProfilePage(),
       ),
 
-      // TODO: Add more routes as needed
+      // AR Navigation
+      GoRoute(
+        path: arNavigation,
+        builder: (context, state) {
+          final destinationName = state.uri.queryParameters['destination'];
+          return ARCameraView(destinationName: destinationName);
+        },
+      ),
+
+      // Destination Details
+      GoRoute(
+        path: destinationDetails,
+        builder: (context, state) {
+          final name = state.uri.queryParameters['name'] ?? 'Unknown';
+          final floor = state.uri.queryParameters['floor'];
+          final description = state.uri.queryParameters['description'];
+          final category = state.uri.queryParameters['category'];
+          return DestinationDetailsPage(
+            destinationName: name,
+            floor: floor,
+            description: description,
+            category: category,
+          );
+        },
+      ),
     ],
     errorBuilder: (context, state) => Scaffold(
       body: Center(

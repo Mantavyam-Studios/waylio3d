@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/config/app_router.dart';
 import '../../../../data/models/destination_model.dart';
 
 class ExplorePage extends StatefulWidget {
@@ -264,68 +266,12 @@ class _ExplorePageState extends State<ExplorePage> {
   }
 
   void _showDestinationDetails(DestinationModel destination) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.6,
-        minChildSize: 0.4,
-        maxChildSize: 0.9,
-        expand: false,
-        builder: (context, scrollController) => SingleChildScrollView(
-          controller: scrollController,
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: AppColors.border,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  destination.name,
-                  style: Theme.of(context).textTheme.displaySmall,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  destination.roomNumber,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  destination.description,
-                  style: Theme.of(context).textTheme.bodyLarge,
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      // TODO: Navigate to AR Navigation
-                    },
-                    icon: const Icon(Icons.navigation),
-                    label: const Text('Navigate'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+    // Navigate to destination details page
+    context.push(
+      '${AppRouter.destinationDetails}?name=${Uri.encodeComponent(destination.name)}'
+      '&floor=${Uri.encodeComponent(destination.roomNumber)}'
+      '&description=${Uri.encodeComponent(destination.description)}'
+      '&category=${Uri.encodeComponent(destination.category)}',
     );
   }
 

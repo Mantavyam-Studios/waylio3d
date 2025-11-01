@@ -1,20 +1,46 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../auth/data/auth_bloc.dart';
+import '../../../auth/data/auth_state.dart';
+import '../../../auth/data/auth_event.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Check if user is guest or logged in
-    final isGuest = true; // Placeholder
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profile'),
+        elevation: 0,
       ),
-      body: isGuest ? _buildGuestView(context) : _buildLoggedInView(context),
+      body: BlocConsumer<AuthBloc, AuthState>(
+        listener: (context, state) {
+          if (state is Unauthenticated) {
+            // Navigate to login when signed out
+            context.go('/login');
+          } else if (state is AuthError) {
+            // Show error message
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: AppColors.error,
+              ),
+            );
+          }
+        },
+        builder: (context, state) {
+          if (state is GuestMode) {
+            return _buildGuestView(context);
+          } else if (state is Authenticated) {
+            return _buildLoggedInView(context, state.user);
+          } else {
+            return const Center(child: CircularProgressIndicator());
+          }
+        },
+      ),
     );
   }
 
@@ -28,7 +54,7 @@ class ProfilePage extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -72,7 +98,7 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildLoggedInView(BuildContext context) {
+  Widget _buildLoggedInView(BuildContext context, user) {
     return SingleChildScrollView(
       child: Column(
         children: [
@@ -88,15 +114,20 @@ class ProfilePage extends StatelessWidget {
                 CircleAvatar(
                   radius: 50,
                   backgroundColor: Colors.white,
-                  child: const Icon(
-                    Icons.person,
-                    size: 50,
-                    color: AppColors.primary,
-                  ),
+                  backgroundImage: user.photoUrl != null
+                      ? NetworkImage(user.photoUrl!)
+                      : null,
+                  child: user.photoUrl == null
+                      ? const Icon(
+                          Icons.person,
+                          size: 50,
+                          color: AppColors.primary,
+                        )
+                      : null,
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'John Doe', // TODO: Replace with actual user name
+                  user.name,
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -104,7 +135,7 @@ class ProfilePage extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'john.doe@example.com', // TODO: Replace with actual email
+                  user.email,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Colors.white70,
                   ),
@@ -113,11 +144,11 @@ class ProfilePage extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    'Student', // TODO: Replace with actual user type
+                    user.userType,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
@@ -243,19 +274,19 @@ class ProfilePage extends StatelessWidget {
   void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Log Out'),
         content: const Text('Are you sure you want to log out?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () {
-              Navigator.pop(context);
-              // TODO: Implement logout
-              context.go('/login');
+              Navigator.pop(dialogContext);
+              // Dispatch sign out event
+              context.read<AuthBloc>().add(SignOut());
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.error,
@@ -270,20 +301,21 @@ class ProfilePage extends StatelessWidget {
   void _showDeleteAccountDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Delete Account'),
         content: const Text(
           'Are you sure you want to delete your account? This action cannot be undone.',
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () {
-              Navigator.pop(context);
-              // TODO: Implement account deletion
+              Navigator.pop(dialogContext);
+              // Dispatch delete account event
+              context.read<AuthBloc>().add(DeleteAccount());
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.error,

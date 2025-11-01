@@ -1,15 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/config/app_router.dart';
+import '../../../auth/data/auth_bloc.dart';
+import '../../../auth/data/auth_state.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Home'),
+        title: const Text('Waylio'),
+        elevation: 0,
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_outlined),
@@ -25,7 +44,15 @@ class HomePage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Welcome Card
-            _buildWelcomeCard(context),
+            BlocBuilder<AuthBloc, AuthState>(
+              builder: (context, state) {
+                return _buildWelcomeCard(context, state);
+              },
+            ),
+            const SizedBox(height: 20),
+
+            // Search Bar
+            _buildSearchBar(context),
             const SizedBox(height: 24),
 
             // Quick Action Card
@@ -36,6 +63,10 @@ class HomePage extends StatelessWidget {
             _buildBuildingStatusCard(context),
             const SizedBox(height: 24),
 
+            // Popular Destinations
+            _buildPopularDestinations(context),
+            const SizedBox(height: 24),
+
             // Recent Destinations
             _buildRecentDestinations(context),
           ],
@@ -44,7 +75,15 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildWelcomeCard(BuildContext context) {
+  Widget _buildWelcomeCard(BuildContext context, AuthState state) {
+    String userName = 'Guest User';
+    String? photoUrl;
+
+    if (state is Authenticated) {
+      userName = state.user.name;
+      photoUrl = state.user.photoUrl;
+    }
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -56,11 +95,14 @@ class HomePage extends StatelessWidget {
                 CircleAvatar(
                   radius: 30,
                   backgroundColor: AppColors.primary,
-                  child: const Icon(
-                    Icons.person,
-                    color: Colors.white,
-                    size: 32,
-                  ),
+                  backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
+                  child: photoUrl == null
+                      ? const Icon(
+                          Icons.person,
+                          color: Colors.white,
+                          size: 32,
+                        )
+                      : null,
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -75,7 +117,7 @@ class HomePage extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Guest User', // TODO: Replace with actual user name
+                        userName,
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                     ],
@@ -89,12 +131,53 @@ class HomePage extends StatelessWidget {
     );
   }
 
+  Widget _buildSearchBar(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: TextField(
+        controller: _searchController,
+        decoration: InputDecoration(
+          hintText: 'Search destinations...',
+          prefixIcon: const Icon(Icons.search),
+          suffixIcon: _searchController.text.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.clear),
+                  onPressed: () {
+                    setState(() {
+                      _searchController.clear();
+                    });
+                  },
+                )
+              : null,
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
+        ),
+        onSubmitted: (value) {
+          if (value.isNotEmpty) {
+            // Navigate to explore page with search query
+            context.go('${AppRouter.explore}?search=$value');
+          }
+        },
+        onChanged: (value) {
+          setState(() {});
+        },
+      ),
+    );
+  }
+
   Widget _buildQuickActionCard(BuildContext context) {
     return Card(
       color: AppColors.primary,
       child: InkWell(
         onTap: () {
-          // TODO: Navigate to AR Navigation
+          // Navigate to AR Navigation
+          context.push(AppRouter.arNavigation);
         },
         borderRadius: BorderRadius.circular(12),
         child: Padding(
@@ -104,7 +187,7 @@ class HomePage extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(
@@ -156,7 +239,7 @@ class HomePage extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.success.withOpacity(0.1),
+                color: AppColors.success.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(
@@ -187,7 +270,7 @@ class HomePage extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: AppColors.success.withOpacity(0.1),
+                color: AppColors.success.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
@@ -201,6 +284,76 @@ class HomePage extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildPopularDestinations(BuildContext context) {
+    final popularPlaces = [
+      {'name': 'Library', 'icon': Icons.local_library, 'floor': 'Ground Floor'},
+      {'name': 'Cafeteria', 'icon': Icons.restaurant, 'floor': '1st Floor'},
+      {'name': 'Lab 301', 'icon': Icons.computer, 'floor': '3rd Floor'},
+      {'name': 'Auditorium', 'icon': Icons.event_seat, 'floor': '2nd Floor'},
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Popular Destinations',
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
+        const SizedBox(height: 12),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            childAspectRatio: 1.5,
+          ),
+          itemCount: popularPlaces.length,
+          itemBuilder: (context, index) {
+            final place = popularPlaces[index];
+            return Card(
+              child: InkWell(
+                onTap: () {
+                  // Navigate to AR with destination name
+                  context.push('${AppRouter.arNavigation}?destination=${place['name']}');
+                },
+                borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        place['icon'] as IconData,
+                        size: 32,
+                        color: AppColors.primary,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        place['name'] as String,
+                        style: Theme.of(context).textTheme.titleSmall,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        place['floor'] as String,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 
@@ -235,7 +388,7 @@ class HomePage extends StatelessWidget {
                   Icon(
                     Icons.history,
                     size: 48,
-                    color: AppColors.textSecondary.withOpacity(0.5),
+                    color: AppColors.textSecondary.withValues(alpha: 0.5),
                   ),
                   const SizedBox(height: 12),
                   Text(
